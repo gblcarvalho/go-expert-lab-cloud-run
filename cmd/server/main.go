@@ -26,5 +26,5 @@ func main() {
 	handler := web.NewWeatherHandler(cepGateway, weatherGateway)
 
 	r.Get("/weather/{cep}", handler.Get)
-	http.ListenAndServe(":8000", r)
+	http.ListenAndServe(":8080", r)
 }

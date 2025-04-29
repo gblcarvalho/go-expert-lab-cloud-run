@@ -2,11 +2,14 @@
 FROM golang:1.24 AS builder
 WORKDIR /app
 
-# Copia tudo para o build
+# Copia os arquivos
+COPY go.mod go.sum ./
+RUN go mod download
+
 COPY . .
 
-# Compila o binário na pasta build
-RUN go build -o /app/build/server /app/cmd/server/main.go
+# Build do binário para Linux amd64 (e saída direta para /server)
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /server /app/cmd/server/main.go
 
 # Etapa 2: imagem final e enxuta
 FROM debian:bookworm-slim
@@ -16,17 +19,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
-# Cria diretório build (se necessário)
-RUN mkdir -p /app/build
+# Copia o binário
+COPY --from=builder /server /app/server
 
-# Copia o .env (se existir)
+# Copia .env se quiser (opcional)
 COPY --from=builder /app/cmd/server/.env /app/.env
 
-# Copia o binário
-COPY --from=builder /app/build/server /app/build/server
+# Expõe a porta 8080
+EXPOSE 8080
 
-# Expõe a porta do app
-EXPOSE 8000
-
-# Comando de execução
-CMD ["./build/server"]
+# Comando para rodar o server
+CMD ["./server"]

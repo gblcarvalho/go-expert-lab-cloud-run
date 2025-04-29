@@ -32,7 +32,7 @@ Este comando irá:
 
 
 O serviço da aplicação está disponíveis em
-- HTTP (RESTful): http://localhost:8000/weather/{cep}
+- HTTP (RESTful): http://localhost:8080/weather/{cep}
 
 
 ## 🧪 Testes automatizados
@@ -42,3 +42,11 @@ Para facilitar, o projeto também fornece um comando para rodar testes automáti
 ```bash
 source ./test.sh
 ```
+
+## Google Cloud Run
+
+O app está disponivel no Google Cloud Run em:
+https://goexpert-800294040372.us-central1.run.app/
+
+e pode ser testado na rota:
+https://goexpert-800294040372.us-central1.run.app/weather/{cep}
