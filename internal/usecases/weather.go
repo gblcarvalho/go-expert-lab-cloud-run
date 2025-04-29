@@ -1,6 +1,10 @@
 package usecases
 
-import "github.com/gblcarvalho/go-expert-lab-cloud-run/internal/gateways"
+import (
+	"github.com/gblcarvalho/go-expert-lab-cloud-run/internal/gateways"
+	"github.com/gblcarvalho/go-expert-lab-cloud-run/internal/utils"
+	"github.com/gblcarvalho/go-expert-lab-cloud-run/internal/valueobjects"
+)
 
 type GetWeatherUseCase struct {
 	cepGateway     gateways.CEPGatewayInterface
@@ -8,9 +12,9 @@ type GetWeatherUseCase struct {
 }
 
 type GetWeatherUseCaseOutput struct {
-	Celsius    string `json:"temp_C,omitempty"`
-	Fahrenheit string `json:"temp_F,omitempty"`
-	Kelvin     string `json:"temp_K,omitempty"`
+	Celsius    float64 `json:"temp_C,omitempty"`
+	Fahrenheit float64 `json:"temp_F,omitempty"`
+	Kelvin     float64 `json:"temp_K,omitempty"`
 }
 
 func NewGetWeatherUseCase(
@@ -23,23 +27,32 @@ func NewGetWeatherUseCase(
 	}
 }
 
-func (uc *GetWeatherUseCase) Execute(cep string) (GetWeatherUseCaseOutput, error) {
-	location, err := uc.cepGateway.GetLocation(cep)
+func (uc *GetWeatherUseCase) Execute(cepStr string) (GetWeatherUseCaseOutput, error) {
+	cep, err := valueobjects.NewCEP(cepStr)
 	if err != nil {
 		return GetWeatherUseCaseOutput{}, err
 	}
-	weather, err := uc.weatherGateway.GetWeather(location.Latitude, location.Longitude)
+
+	location, err := uc.cepGateway.GetLocation(cep.Value())
 	if err != nil {
-		return GetWeatherUseCaseOutput{}, err
+		return GetWeatherUseCaseOutput{}, utils.ErrCEPNotFound
+	}
+	weather, err := uc.weatherGateway.GetWeather(location.Locality)
+	if err != nil {
+		return GetWeatherUseCaseOutput{}, utils.ErrWeather
 	}
 
 	return GetWeatherUseCaseOutput{
 		Celsius: weather.Celsius,
-		Fahrenheit: weather.Fahrenheit,
-		Kelvin: FahrenheitToKelvin(weather.Fahrenheit),
+		Fahrenheit: CelsiusToFahrenheit(weather.Celsius),
+		Kelvin: CelsiusToKelvin(weather.Celsius),
 	}, nil
 }
 
-func FahrenheitToKelvin(tempF string) string {
-	return "0"
+func CelsiusToFahrenheit(tempC float64) float64 {
+	return tempC * 1.8 + 32
+}
+
+func CelsiusToKelvin(tempC float64) float64 {
+	return tempC + 273
 }

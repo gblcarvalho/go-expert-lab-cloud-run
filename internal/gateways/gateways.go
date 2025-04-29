@@ -5,15 +5,13 @@ type CEPGatewayInterface interface {
 }
 
 type WeatherGatewayInterface interface {
-	GetWeather(latitude string, longitude string) (WeatherTemp, error)
+	GetWeather(locality string) (WeatherTemp, error)
 }
 
 type CEPLocation struct {
-	Latitude string
-	Longitude string
+	Locality string
 }
 
 type WeatherTemp struct {
-	Celsius    string
-	Fahrenheit string
+	Celsius    float64
 }

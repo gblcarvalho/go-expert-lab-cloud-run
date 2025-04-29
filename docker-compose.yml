@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  goapp:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    env_file: 
+      - ./cmd/server/.env
+    restart: unless-stopped
+    ports:
+      - "8000:8000"

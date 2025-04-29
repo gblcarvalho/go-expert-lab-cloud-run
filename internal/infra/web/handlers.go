@@ -2,10 +2,12 @@ package web
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/gblcarvalho/go-expert-lab-cloud-run/internal/gateways"
 	"github.com/gblcarvalho/go-expert-lab-cloud-run/internal/usecases"
+	"github.com/gblcarvalho/go-expert-lab-cloud-run/internal/utils"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -24,23 +26,18 @@ func NewWeatherHandler(
 	}
 }
 
-/*
-Em caso de sucesso:
-	Código HTTP: 200
-	Response Body: { "temp_C": 28.5, "temp_F": 28.5, "temp_K": 28.5 }
-Em caso de falha, caso o CEP não seja válido (com formato correto):
-	Código HTTP: 422
-	Mensagem: invalid zipcode
-Em caso de falha, caso o CEP não seja encontrado:
-	Código HTTP: 404
-	Mensagem: can not find zipcode
-*/
 func (h *WeatherHandler) Get(w http.ResponseWriter, r *http.Request) {
 	cep := chi.URLParam(r, "cep")
 	getWeatherUC := usecases.NewGetWeatherUseCase(h.cepGateway, h.weatherGateway)
 	output, err := getWeatherUC.Execute(cep)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		if errors.Is(err, utils.ErrInvalidCEP) {
+			http.Error(w, "invalid zipcode", http.StatusUnprocessableEntity)
+		} else if errors.Is(err, utils.ErrCEPNotFound) {
+			http.Error(w, "can not find zipcode", http.StatusNotFound)
+		} else {
+			http.Error(w, "can not find weather", http.StatusServiceUnavailable)
+		}
 		return
 	}
 
